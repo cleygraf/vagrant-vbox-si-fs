@@ -148,12 +148,15 @@ servers.each_with_index do |vm,index|
             end
             if ARGV[0] == "up"
               config.vm.provision "network", type: "shell", inline: "service network restart", run: "always" # This is because EL7 doesn't always 'start' the host-only networks
+              ### Added by christoph@leygraf.de 2018-12-09 ### 
+              config.vm.provision "sshd", type: "shell", inline: "cp /etc/ssh/sshd_config /etc/ssh/sshd_config.org && sed -i 's/#PasswordAuthentication yes.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && sed -i 's/PasswordAuthentication no.*/#PasswordAuthentication no/' /etc/ssh/sshd_config && systemctl restart sshd ", run: "always" # Change sshd_config to allow ssh with username/password
             end
             if hostname == "#{vm['basename_vm']}1"
               srv.vm.provision "ansible_local", run: "always" do |ansible| # This will also try to install Ansible if it does not already exist
                 ansible.playbook = "base-provision/init.yml"
                 ansible.inventory_path = "inventory"
                 ansible.limit = "#{hostgroup}"
+                ansible.verbose = "vvv"
               end
             end # end if
 
